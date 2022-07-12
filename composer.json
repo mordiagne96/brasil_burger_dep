@@ -82,10 +82,10 @@
             "requirements-checker": "script"
         },
         "post-install-cmd": [
-            "php bin/console doctrine:schema:update --force",
-            "php bin/console doctrine:fixtures:load --append"
+            "@auto-scripts"
         ],
         "post-update-cmd": [
+            "@auto-scripts"
         ],
         "compile" : [ "php bin/console doctrine:migration:migrate"]
     },
