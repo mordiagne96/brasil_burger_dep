@@ -21,10 +21,10 @@ final class UploadService
 
     public function upload(Produit $produit)
     {
+        // dd($produit->getFile());
         $image = stream_get_contents(fopen($produit->getFile()->getRealPath(), 'rb'));
         // dd($menu);
            $produit->setImage($image);
-           $produit->setEtat(0);
         return $produit;
     }
 

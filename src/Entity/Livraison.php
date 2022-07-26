@@ -7,9 +7,20 @@ use App\Repository\LivraisonRepository;
 use Doctrine\Common\Collections\Collection;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: LivraisonRepository::class)]
-#[ApiResource()]
+#[ApiResource(
+    collectionOperations:[
+        "get",
+        "post"=>[
+            "normalization_context"=>['groups' => ['livraison:read']],
+            "denormalization_context"=>['groups' => ['livraison:write']]
+        ]
+    ]
+)]
 class Livraison
 {
     #[ORM\Id]
@@ -18,10 +29,21 @@ class Livraison
     private $id;
 
     #[ORM\Column(type: 'integer')]
+    #[Groups(['livraison:write','livraison:read'])]
     private $montantTotal;
 
     #[ORM\OneToMany(mappedBy: 'livraison', targetEntity: Commande::class)]
+    #[Groups(['livraison:write','livraison:read'])]
+    #[Assert\Count(
+        min: 1,
+        minMessage: "Veuillez Ajouter une commande"
+    )]
     private $commandes;
+
+    #[ORM\ManyToOne(targetEntity: Livreur::class, inversedBy: 'livraisons')]
+    #[Groups(['livraison:write','livraison:read'])]
+    #[Assert\NotNull(message:"Veuillez affecter un livreur avant de valider la livraison")]
+    private $livreur;
 
     public function __construct()
     {
@@ -73,5 +95,29 @@ class Livraison
         }
 
         return $this;
+    }
+
+    public function getLivreur(): ?Livreur
+    {
+        return $this->livreur;
+    }
+
+    public function setLivreur(?Livreur $livreur): self
+    {
+        $this->livreur = $livreur;
+
+        return $this;
+    }
+
+    #[Assert\Callback]
+    public function isEtatCommande(ExecutionContextInterface $context)
+    {
+        foreach ($this->commandes as $commande) {
+            
+            if(strtolower($commande->getEtat()) != "terminer"){
+                $context->buildViolation('Erreur!! Vous avez ajouter une commande qui ne peut pas etre livré!!')
+                ->addViolation();
+            }
+        }
     }
 }

@@ -19,20 +19,24 @@ final class MultipartDecoder implements DecoderInterface
     {
         $request = $this->requestStack->getCurrentRequest();
 
-        // dd($request->files);
+        // dd($request);
         if (!$request) {
             return null;
         }
-
-        $prix = intval($request->request->all()["prix"]);
+        if(isset($request->request->all()["prix"])){
+            $prix = intval($request->request->all()["prix"]);
+            $request->request->set('prix',$prix);
+        }
+        
         // dd($prix);
-        $request->request->set('prix',$prix);
+       
         // dd($request->request->all()["prix"]);
         // $request->request->all()->
         return array_map(static function ($element) {
             // dd($element);
             // Multipart form values will be encoded in JSON.
             // dd($element);
+            // dump($element);
             if(is_array($element)){
                 $decoded = $element;
             }else{  

@@ -35,7 +35,7 @@ class Taille
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['Menu:read', 'boisson:write','taille:read'])]
+    #[Groups(['Menu:write', 'boisson:write','taille:read','com:write','com:read:simple'])]
     private $id;
 
     #[Assert\Regex(
@@ -43,12 +43,12 @@ class Taille
         message:"Le prix est invalide"
     )]
     #[ORM\Column(type: 'integer', nullable: true)]
-    #[Groups(["complement:read:all",'taille:read:simple','Menu:read', 'boisson:write','taille:read'])]
+    #[Groups(["complement:read:all",'taille:read:simple','Menu:write', 'boisson:write','taille:read','com:write','com:read:simple'])]
     private $prix;
 
     #[Assert\NotNull(message: "Le prix est Obligatoire!!!")]
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    #[Groups(["complement:read:all",'taille:read:simple','Menu:read', 'boisson:write','taille:read'])]
+    #[Groups(["complement:read:all",'taille:read:simple','Menu:write', 'boisson:write','taille:read','com:write','com:read:simple'])]
     private $libelle;
 
     // #[ORM\ManyToMany(targetEntity: Boisson::class, mappedBy: 'tailles')]
@@ -58,6 +58,9 @@ class Taille
     #[ORM\OneToMany(mappedBy: 'taille', targetEntity: TailleBoisson::class)]
     private $tailleBoissons;
 
+    #[ORM\OneToMany(mappedBy: 'taille', targetEntity: TailleMenu::class)]
+    private $tailleMenus;
+
     // #[ORM\ManyToOne(targetEntity: Menu::class, inversedBy: 'tailles')]
     // private $menu;
 
@@ -66,6 +69,7 @@ class Taille
     {
         // $this->boissons = new ArrayCollection();
         $this->tailleBoissons = new ArrayCollection();
+        $this->tailleMenus = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -139,5 +143,35 @@ class Taille
 
     //     return $this;
     // }
+
+    /**
+     * @return Collection<int, TailleMenu>
+     */
+    public function getTailleMenus(): Collection
+    {
+        return $this->tailleMenus;
+    }
+
+    public function addTailleMenu(TailleMenu $tailleMenu): self
+    {
+        if (!$this->tailleMenus->contains($tailleMenu)) {
+            $this->tailleMenus[] = $tailleMenu;
+            $tailleMenu->setTaille($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTailleMenu(TailleMenu $tailleMenu): self
+    {
+        if ($this->tailleMenus->removeElement($tailleMenu)) {
+            // set the owning side to null (unless already changed)
+            if ($tailleMenu->getTaille() === $this) {
+                $tailleMenu->setTaille(null);
+            }
+        }
+
+        return $this;
+    }
 
 }

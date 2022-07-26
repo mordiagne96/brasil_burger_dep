@@ -5,9 +5,16 @@ use App\Repository\CommandeRepository;
 
 final class GenererNumeroCommandeService{
 
-    public function genererNumero(CommandeRepository $repo){
+    private CommandeRepository $repo;
 
-        $id = $repo->findOneBy([],['id'=>'desc'])->getId();
+    public function __construct(CommandeRepository $repo)
+    {
+        $this->repo = $repo;
+    }
+
+    public function genererNumero(){
+
+        $id = $this->repo->findOneBy([],['id'=>'desc'])->getId();
         $id++;
         $numero = "COM-00".$id;
 

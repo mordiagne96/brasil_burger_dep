@@ -7,25 +7,38 @@ use App\Repository\QuartierRepository;
 use Doctrine\Common\Collections\Collection;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Dto\QuartierInput;
+use App\Dto\QuartierOutput;
 use App\Dto\ZoneOutput;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: QuartierRepository::class)]
-#[ApiResource(input:QuartierInput::class, output:ZoneOutput::class)]
+// #[ApiResource(input:QuartierInput::class, output:QuartierOutput::class)]
+#[ApiResource(
+    collectionOperations:[
+        "get"=>[
+            "output"=>QuartierOutput::class
+        ],
+        "post"=>[
+            "input"=>QuartierInput::class,
+            "output"=>QuartierOutput::class
+        ]
+    ]
+)]
 class Quartier
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    // #[Groups(['com:write'])]
+    #[Groups(['com:write','com:read:simple'])]
     private $id;
 
     #[ORM\Column(type: 'string', length: 100)]
-    // #[Groups(['com:write'])]
+    #[Groups(['com:write','com:read:simple'])]
     private $libelle;
 
     #[ORM\ManyToOne(targetEntity: Zone::class, inversedBy: 'quartiers')]
+    #[Groups(['com:read:simple'])]
     private $zone;
 
     #[ORM\OneToMany(mappedBy: 'quartier', targetEntity: Commande::class)]

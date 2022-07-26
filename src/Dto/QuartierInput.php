@@ -11,18 +11,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 final class QuartierInput
 {
     /**
-     * @var int
-     */
-    public $id;
-    /**
      * @var string
      */
     #[Assert\NotNull(message: "Le libelle est Obligatoire")]
     public $libelle;
 
-    /**
-     * @var ZoneInput
-     */
-    #[Assert\NotNull(message: "Zone Obligatoire" )]
-    public $zone;
+    // /**
+    //  * @var ZoneInput
+    //  */
+    // #[Assert\NotNull(message: "Zone Obligatoire" )]
+    // public $zone;
 }

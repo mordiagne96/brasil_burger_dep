@@ -24,7 +24,9 @@ use Doctrine\Common\Collections\ArrayCollection;
             // "security"=>"is_granted('ROLE_CLIENT')",
             // "security_message"=>"Vous n'avez pas d'accés à cette Ressource"
         ],
-        "post",
+        "post" =>[
+            'denormalization_context' => ['groups' => ['gest:write'] ]
+        ],
         "post_register" => [
             "method"=>"post",
             'path'=>'/register',

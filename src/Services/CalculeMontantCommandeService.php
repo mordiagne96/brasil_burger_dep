@@ -21,18 +21,56 @@ final class CalculeMontantCommandeService{
 
     public function calcule(Commande $commande){
         $montant = 0;
-        
-        // foreach ($commande->getProduitCommandes() as $prod_com) {
-        //     $montant = $montant + ($prod_com->getQuantiteProduit() * $prod_com->getPrix());
-        // }
 
+        if(count($commande->getTailleBoissonCommandes()) > 0 ){
+            foreach ($commande->getTailleBoissonCommandes() as $tailleBC) {
+
+                $prix = $tailleBC->getTailleBoisson()->getTaille()->getPrix();
+                $montant = $montant + ($tailleBC->getQuantite() * $prix);
+
+            }
+        } 
+        
         if($commande->getQuartier() != null){
-           $montant = $montant + $commande->getQuartier()->getZone()->getPrix();
+
+            $montant = $montant + $commande->getQuartier()->getZone()->getPrix();
+
+        }
+
+        if(count($commande->getBurgerCommandes()) > 0){
+
+            foreach ($commande->getBurgerCommandes() as $burgerCom) {
+
+                $prix = $burgerCom->getBurger()->getPrix();
+                $montant = $montant + ($burgerCom->getQuantite() * $prix);
+
+            }
+
+        }
+
+        if(count($commande->getMenuCommandeTailleBoissons()) > 0){
+            
+            foreach ($commande->getMenuCommandeTailleBoissons() as $menuCTB) {
+
+                $prix = $menuCTB->getMenu()->getPrix();
+                $montant = $montant + ($menuCTB->getQuantite() * $prix);
+                
+            }
+
+        }
+
+        if(count($commande->getPortionFriteCommandes())){
+
+            foreach ($commande->getPortionFriteCommandes() as $portionFrite) {
+                $prix = $portionFrite->getPortionFrite()->getPrix();
+                $montant = $montant + ($portionFrite->getQuantite() * $prix);
+
+            }
+
         }
 
         $commande->setMontant($montant);
-        $commande->setDate(new DateTime());
-        $commande->setClient($this->token->getUser());
+        
 
         return $commande;
     }

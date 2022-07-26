@@ -7,6 +7,7 @@ use App\Entity\Book;
 use App\Entity\Zone;
 use ApiPlatform\Core\Validator\ValidatorInterface;
 use ApiPlatform\Core\DataTransformer\DataTransformerInterface;
+use App\Entity\Quartier;
 
 final class ZoneInputDataTransformer implements DataTransformerInterface
 {
@@ -28,6 +29,16 @@ final class ZoneInputDataTransformer implements DataTransformerInterface
         $zone->setNom($data->nom);
         $zone->setPrix($data->prix);
 
+        // dd($data->quartiers);
+
+        foreach ($data->quartiers as $q) {
+            $quartier = new Quartier();
+            $quartier->setLibelle($q->libelle);
+            $zone->addQuartier($quartier);
+            // dump($quartier->libelle);
+        }
+
+        // dd($zone);
         return $zone;
     }
 

@@ -8,7 +8,7 @@ final class CalculePrixMenuService{
 
     private ?TokenInterface $token;
 
-    public function __construct( TokenStorageInterface $tokenStorage) {
+    public function __construct(TokenStorageInterface $tokenStorage) {
 
         $this->token = $tokenStorage->getToken();
 
@@ -23,16 +23,15 @@ final class CalculePrixMenuService{
 
         }
 
-        // foreach ($menu->getTailles() as $taille){
+        foreach ($menu->getTailleMenus() as $tailleMenu){
             
-        //     $montant = $montant + $taille->getPrix();
+            $montant = $montant + ($tailleMenu->getQuantite() * $tailleMenu->getTaille()->getPrix());
 
-        // }
+        }
 
         // dd($menu->getTailles()[1]);
 
         $menu->setPrix($montant);
-        $menu->setGestionnaire($this->token->getUser());
 
         return $menu;
     }

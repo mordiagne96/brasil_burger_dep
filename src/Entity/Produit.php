@@ -32,25 +32,22 @@ class Produit
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    // #[Groups(['write'])]
-    #[Groups(["simple","burger:read",'portion:read:simple','complement:read:all','Menu:read', 'boisson:simple','taille:read','com:write'])]
+    #[Groups(["simple","burger:read",'portion:read:simple','complement:read:all','Menu:write','Menu:read', 'boisson:simple','taille:read','com:write','com:read:simple'])]
     protected $id;
 
     #[ORM\Column(type: 'string', length: 255, unique: true)]
     #[Assert\NotNull(message: "Le nom est Obligatoire!!!")]
     #[Assert\NotBlank(message:"Le nom est Obligatoire")]
     // #[Groups(['write'])]
-    #[Groups(["simple","burger:read",'burger:read:simple','portion:read:simple','complement:read:all','Menu:read','boisson:write','write:simple','burger:write:simple','boisson:simple','Menu:write:simple','taille:read','com:write'])]
+    #[Groups(["simple","burger:read",'burger:read:simple','portion:read:simple','complement:read:all','Menu:write','boisson:write','write:simple','burger:write:simple','boisson:simple','Menu:read','taille:read','com:write','com:read:simple'])]
     protected $nom;
 
-    #[Assert\Regex(
-        pattern: '/^[0-9]*$/i',
-        message:"Le prix est invalide"
-    )]
-    #[Assert\NotNull(message: "Le prix est Obligatoire!!!")]
-    #[Groups(["simple","burger:read",'burger:read:simple','write:simple','write:all', 'menu:read', 'boisson:simple','taille:read'])]
+    // #[Assert\NotNull(message: "Le prix est Obligatoire!!!")]
+    // #[Assert\Positive(message: "Le prix ne doit pas etre négatiif")]
+    #[Groups(["simple","burger:read",'burger:read:simple','write:simple','write:all', 'Menu:read', 'boisson:simple','taille:read','burger:write:simple'])]
     #[ORM\Column(type: 'integer', nullable: true)]
     // #[Groups(['write'])]
+    
     private $prix;
 
 
@@ -63,22 +60,19 @@ class Produit
     private $etat;
 
     #[ORM\Column(type: 'blob', nullable: true)]
-    #[Groups(['burger:write:simple','burger:read','burger:read:simple','simple','taille:read'])]
+    #[Groups(['burger:read','burger:read:simple','simple','taille:read','Menu:read'])]
     private $image;
 
      /**
      * @Vich\UploadableField(mapping="media_object", fileNameProperty="filePath")
      */
-    #[Groups(['Menu:read','burger:write:simple'])]
+    #[Groups(['Menu:write','burger:write:simple'])]
+    #[Assert\NotNull(message: "L'image est Obligatoire!!!")]
     public ?File $file = null;
 
     #[ORM\ManyToOne(targetEntity: Gestionnaire::class, inversedBy: 'produits')]
     private $gestionnaire;
-
-  
-
-    
-
+     
     public function __construct()
     {
         $this->produitCommandes = new ArrayCollection();
@@ -102,17 +96,6 @@ class Produit
         return $this;
     }
 
-    // public function getImage(): ?string
-    // {
-    //     return $this->image;
-    // }
-
-    // public function setImage(?string $image): self
-    // {
-    //     $this->image = $image;
-
-    //     return $this;
-    // }
 
     public function getPrix(): ?int
     {
@@ -126,23 +109,8 @@ class Produit
         return $this;
     }
 
-
-    // public function getEtat(): ?int
-    // {
-    //     return $this->etat;
-    // }
-
-    // public function setEtat(int $etat): self
-    // {
-    //     $this->etat = $etat;
-
-    //     return $this;
-    // }
-
     public function getImage(){
-        // dd(base64_encode($this->image));
-        // dd(base64_encode(stream_get_contents($this->image)));
-        return is_resource($this->image) ? utf8_encode(base64_encode(stream_get_contents($this->image))) : $this->image;
+        return is_resource($this->image) ? base64_encode(stream_get_contents($this->image)) : $this->image;
     }
 
     public function setImage($image): self

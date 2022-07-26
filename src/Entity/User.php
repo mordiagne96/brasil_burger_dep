@@ -6,14 +6,15 @@ use Doctrine\ORM\Mapping as ORM;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\Collection;
 use ApiPlatform\Core\Annotation\ApiResource;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\HttpFoundation\Response;
 use ApiPlatform\Core\Annotation\ApiSubresource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -28,14 +29,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(["user:read:simple",'user:read:all'])]
+    #[Groups(["user:read:simple",'user:read:all','com:read:simple','com:read','livraison:read','livraison:write'])]
     protected $id;
 
     #[Assert\Email(
         message: 'Cette email {{ value }} n\'est pas valid .',
     )]
     #[ORM\Column(type: 'string', length: 180, unique: true)]
-    #[Groups(["user:read:simple",'user:read:all'])]
+    #[Groups(["user:read:simple",'user:read:all','gest:write','com:read:simple','com:read','livreur:write','livreur:read','livraison:read'])]
     protected $login;
 
     #[ORM\Column(type: 'json',)]
@@ -43,14 +44,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     protected $roles = [];
 
     #[ORM\Column(type: 'string')]
+    #[Groups(['gest:write','livreur:write'])]
+    #[Assert\Regex(
+        pattern: "/^(?=.*[a-z])(?=.*\d).{6,}$/i",
+        message:"Le mot passe est invalide"
+    )]
+    #[Assert\NotNull(message: "Le mot de passe est Obligatoire!!!")]
+    #[Assert\NotBlank(message: "Le mot de passe est Obligatoire!!!")]
     protected $password;
 
-    #[ORM\Column(type: 'string', length: 30, nullable: true)]
-    #[Groups(["user:read:simple",'user:read:all'])]
+    #[Groups(['gest:write','livreur:write'])]
+    #[Assert\NotNull(message: "Confirmer votre mot de passe !!!")]
+    #[Assert\NotBlank(message: "Confirmer votre mot de passe!!!")]
+    protected $confirmPassword;
+
+    #[ORM\Column(type: 'string', length: 30, nullable: false)]
+    #[Assert\NotNull(message: "Le nom est Obligatoire!!!")]
+    #[Groups(["user:read:simple",'user:read:all','gest:write','com:read:simple', 'com:read','livreur:write','livreur:read','livraison:read'])]
     protected $nom;
 
-    #[Groups(["user:read:simple",'user:read:all'])]
+    #[Groups(["user:read:simple",'user:read:all','gest:write','com:read:simple', 'com:read','livreur:write','livreur:read','livraison:read'])]
     #[ORM\Column(type: 'string', length: 30)]
+    #[Assert\NotNull(message: "Le prenom est Obligatoire!!!")]
     protected $prenom;
 
     #[ORM\Column(type: 'boolean')]
@@ -163,4 +178,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+
+    /**
+     * Get the value of confirmPassword
+     */ 
+    public function getConfirmPassword()
+    {
+        return $this->confirmPassword;
+    }
+
+    /**
+     * Set the value of confirmPassword
+     *
+     * @return  self
+     */ 
+    public function setConfirmPassword($confirmPassword)
+    {
+        $this->confirmPassword = $confirmPassword;
+
+        return $this;
+    }
+
+    #[Assert\Callback]
+    public function validatePassword(ExecutionContextInterface $context)
+    {
+        if($this->getPassword() != $this->getConfirmPassword()){
+            $context->buildViolation('Les Mots de passe ne correspondent pas!')
+                        ->addViolation();
+        }
+    }
 }

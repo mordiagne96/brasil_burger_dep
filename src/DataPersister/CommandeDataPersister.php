@@ -3,7 +3,9 @@ namespace App\DataPersister;
 
 use DateTime;
 use App\Entity\Commande;
+use App\Services\UpdateStockService;
 use App\Repository\CommandeRepository;
+use App\Services\ValidCommandeService;
 use App\Services\CalculePrixMenuService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Services\GenererNumeroCommandeService;
@@ -17,15 +19,24 @@ class CommandeDataPersister implements DataPersisterInterface
     private $entityManager;
     private $service;
     private $genererService;
-    private $repo;
+    private $token;
+    private $validCommandeService;
+    private $updateStockService;
     
-    public function __construct(EntityManagerInterface $entityManager,TokenStorageInterface $tokenStorage, CalculeMontantCommandeService $service, GenererNumeroCommandeService $genererService, CommandeRepository $repo)
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        TokenStorageInterface $tokenStorage,
+        CalculeMontantCommandeService $montantservice, 
+        GenererNumeroCommandeService $genererService, 
+        ValidCommandeService $validCommandeService,
+        UpdateStockService $updateStockService)
     {
         $this->entityManager = $entityManager;
-        $this->service = $service;
+        $this->montantservice = $montantservice;
         $this->genererService = $genererService;
-        $this->repo = $repo;
-
+        $this->token = $tokenStorage->getToken();
+        $this->validCommandeService = $validCommandeService;
+        $this->UpdateStockService = $updateStockService;
     }
 
     public function supports($data, array $context = []): bool
@@ -35,11 +46,16 @@ class CommandeDataPersister implements DataPersisterInterface
 
     public function persist($data, array $context = [])
     {
-        $commande = $this->service->calcule($data);
-        $numero = $this->genererService->genererNumero($this->repo);
-        $commande->setNumeroCommande($numero);
-        
+        $tailleBoissonUpdate = $this->validCommandeService->isValidCommande($data);
+
+        $numero = $this->genererService->genererNumero();
+        $data->setNumeroCommande($numero);
+        $commande = $this->montantservice->calcule($data);
+        $commande->setDate(new DateTime());
+        $commande->setClient($this->token->getUser());
+
         $this->entityManager->persist($commande);
+        $this->UpdateStockService->updateStock($tailleBoissonUpdate);
         $this->entityManager->flush();
     }
 

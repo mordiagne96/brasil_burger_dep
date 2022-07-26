@@ -92,9 +92,6 @@ class Burger extends Produit
     // #[ORM\ManyToOne(targetEntity: Cataloguee::class, inversedBy: 'burgers')]
     private $cataloguee;
 
-    #[ORM\OneToMany(mappedBy: 'burger', targetEntity: TailleMenu::class)]
-    private $tailleMenus;
-
     #[ORM\OneToMany(mappedBy: 'burger', targetEntity: BurgerCommande::class)]
     private $burgerCommandes;
 
@@ -102,7 +99,6 @@ class Burger extends Produit
     public function __construct()
     {
         $this->burgerMenus = new ArrayCollection();
-        $this->tailleMenus = new ArrayCollection();
         $this->burgerCommandes = new ArrayCollection();
     }
 
@@ -156,36 +152,6 @@ class Burger extends Produit
     public function setCataloguee(?Cataloguee $cataloguee): self
     {
         $this->cataloguee = $cataloguee;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, TailleMenu>
-     */
-    public function getTailleMenus(): Collection
-    {
-        return $this->tailleMenus;
-    }
-
-    public function addTailleMenu(TailleMenu $tailleMenu): self
-    {
-        if (!$this->tailleMenus->contains($tailleMenu)) {
-            $this->tailleMenus[] = $tailleMenu;
-            $tailleMenu->setBurger($this);
-        }
-
-        return $this;
-    }
-
-    public function removeTailleMenu(TailleMenu $tailleMenu): self
-    {
-        if ($this->tailleMenus->removeElement($tailleMenu)) {
-            // set the owning side to null (unless already changed)
-            if ($tailleMenu->getBurger() === $this) {
-                $tailleMenu->setBurger(null);
-            }
-        }
 
         return $this;
     }

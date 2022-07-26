@@ -2,8 +2,10 @@
 
 namespace App\Entity;
 
+use App\Dto\CommandeInput;
 use App\Dto\CommandeOutput;
 use Doctrine\ORM\Mapping as ORM;
+use App\Controller\CommandeController;
 use App\Repository\CommandeRepository;
 use ApiPlatform\Core\Annotation\ApiFilter;
 use Doctrine\Common\Collections\Collection;
@@ -13,8 +15,9 @@ use Symfony\Component\HttpFoundation\Response;
 use ApiPlatform\Core\Annotation\ApiSubresource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use App\Dto\CommandeInput;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints\Valid;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: CommandeRepository::class)]
     #[ApiResource(
@@ -29,12 +32,32 @@ use App\Dto\CommandeInput;
                 'status' => Response::HTTP_CREATED,
                 'denormalization_context' => ['groups' => ['com:write']],
                 'normalization_context' => ['groups' => ['com:read']],
+            ],
+            "add_stock"=>[
+                'method' => 'post',
+                "path"=>"/addCommande",
+                // "validate"=>false,
+                "controller"=>CommandeController::class,
+                'status' => Response::HTTP_CREATED,
+                'denormalization_context' => ['groups' => ['com:write']],
+                'normalization_context' => ['groups' => ['com:read']],
             ]
         ],
         itemOperations:[
-            "get",
-            "put"
-
+            "get" =>[
+                'method' => 'get',
+                'status' => Response::HTTP_OK,
+                'normalization_context' => ['groups' => ['com:read:simple']]
+            ],
+            "update_Etat" =>[
+                'method' => 'put',
+                "path"=>"/updateEtat/{id}/{etat}",
+                // "validate"=>true,
+                "controller"=>UpdateController::class,
+                // 'status' => Response::HTTP_CREATED,
+                'denormalization_context' => ['groups' => ['com:update:etat']],
+                'normalization_context' => ['groups' => ['com:update:read']]
+            ]
         ]
         ),   
     ]
@@ -43,24 +66,20 @@ class Commande
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['com:write','com:read'])]
+    #[Groups(['com:read', 'com:read:simple','com:update:etat','livraison:write','livraison:read','com:update:etat','com:update:read'])]
     private $id;
 
     #[ORM\Column(type: 'string', length: 50)]
-    #[Groups(['com:write','com:read'])]
+    #[Groups(['com:read','com:read:simple','livraison:read','livraison:write','com:update:read'])]
     private $numeroCommande;
 
     #[ORM\Column(type: 'datetime')]
-    #[Groups(['com:write','com:read'])]
+    #[Groups(['com:read','com:read:simple','livraison:read','com:update:read'])]
     private $date;
 
     #[ORM\Column(type: 'integer')]
-    #[Groups(['com:write','com:read'])]
+    #[Groups(['com:read','com:read:simple','livraison:read'])]
     private $montant;
-
-    #[ORM\Column(type: 'integer')]
-    #[Groups(['com:write'])]
-    private $etat;
 
     #[ORM\ManyToOne(targetEntity: Livraison::class, inversedBy: 'commandes')]
     #[ORM\JoinColumn(nullable: true)]
@@ -68,32 +87,46 @@ class Commande
 
     #[ORM\ManyToOne(targetEntity: Client::class, inversedBy: 'commandes')]
     #[ORM\JoinColumn(nullable: false)]
-    #[Groups(['com:write'])]
+    #[Groups(['com:read','com:read:simple','livraison:read'])]
     private $client;
 
     #[ORM\ManyToOne(targetEntity: Gestionnaire::class, inversedBy: 'commandes')]
     private $gestionnaire;
 
     #[ORM\OneToMany(mappedBy: 'commande', targetEntity: TailleBoissonCommande::class, cascade:['persist'])]
-    #[Groups(['com:write'])]
+    #[Groups(['com:write','com:read:simple'])]
     private $tailleBoissonCommandes;
 
     #[ORM\ManyToOne(targetEntity: Quartier::class, inversedBy: 'commandes')]
-    #[Groups(['com:write'])]
+    #[Groups(['com:write','com:read:simple'])]
     private $quartier;
 
-    #[ORM\OneToMany(mappedBy: 'commande', targetEntity: BurgerCommande::class)]
+    #[ORM\OneToMany(mappedBy: 'commande', targetEntity: BurgerCommande::class,  cascade:['persist'])]
+    #[Groups(['com:write','com:read:simple'])]
+    #[Valid()]
     private $burgerCommandes;
 
-    #[ORM\OneToMany(mappedBy: 'commande', targetEntity: MenuCommande::class)]
-    private $menuCommandes;
+    #[ORM\Column(type: 'string', length: 50)]
+    #[Groups(['com:update:etat','com:update:etat'])]
+    private $etat = "en cours";
+
+    #[ORM\OneToMany(mappedBy: 'commande', targetEntity: MenuCommandeTailleBoisson::class, cascade:["persist"])]
+    #[Groups(['com:write','com:read:simple'])]
+    #[Valid()]
+    private $menuCommandeTailleBoissons;
+
+    #[ORM\OneToMany(mappedBy: 'commande', targetEntity: PortionFriteCommande::class,cascade:["persist"] )]
+    #[Groups(['com:write','com:read:simple'])]
+    #[Valid()]
+    private $portionFriteCommandes;
 
     public function __construct()
     {
         $this->produitCommandes = new ArrayCollection();
         $this->tailleBoissonCommandes = new ArrayCollection();
         $this->burgerCommandes = new ArrayCollection();
-        $this->menuCommandes = new ArrayCollection();
+        $this->menuCommandeTailleBoissons = new ArrayCollection();
+        $this->portionFriteCommandes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -137,18 +170,6 @@ class Commande
         return $this;
     }
 
-    public function getEtat(): ?int
-    {
-        return $this->etat;
-    }
-
-    public function setEtat(int $etat): self
-    {
-        $this->etat = $etat;
-
-        return $this;
-    }
-    
     public function getLivraison(): ?Livraison
     {
         return $this->livraison;
@@ -259,33 +280,159 @@ class Commande
         return $this;
     }
 
-    /**
-     * @return Collection<int, MenuCommande>
-     */
-    public function getMenuCommandes(): Collection
+    public function getEtat(): ?string
     {
-        return $this->menuCommandes;
+        return $this->etat;
     }
 
-    public function addMenuCommande(MenuCommande $menuCommande): self
+    public function setEtat(string $etat): self
     {
-        if (!$this->menuCommandes->contains($menuCommande)) {
-            $this->menuCommandes[] = $menuCommande;
-            $menuCommande->setCommande($this);
+        $this->etat = $etat;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MenuCommandeTailleBoisson>
+     */
+    public function getMenuCommandeTailleBoissons(): Collection
+    {
+        return $this->menuCommandeTailleBoissons;
+    }
+
+    public function addMenuCommandeTailleBoisson(MenuCommandeTailleBoisson $menuCommandeTailleBoisson): self
+    {
+        if (!$this->menuCommandeTailleBoissons->contains($menuCommandeTailleBoisson)) {
+            $this->menuCommandeTailleBoissons[] = $menuCommandeTailleBoisson;
+            $menuCommandeTailleBoisson->setCommande($this);
         }
 
         return $this;
     }
 
-    public function removeMenuCommande(MenuCommande $menuCommande): self
+    public function removeMenuCommandeTailleBoisson(MenuCommandeTailleBoisson $menuCommandeTailleBoisson): self
     {
-        if ($this->menuCommandes->removeElement($menuCommande)) {
+        if ($this->menuCommandeTailleBoissons->removeElement($menuCommandeTailleBoisson)) {
             // set the owning side to null (unless already changed)
-            if ($menuCommande->getCommande() === $this) {
-                $menuCommande->setCommande(null);
+            if ($menuCommandeTailleBoisson->getCommande() === $this) {
+                $menuCommandeTailleBoisson->setCommande(null);
             }
         }
 
         return $this;
     }
+
+    /**
+     * @return Collection<int, PortionFriteCommande>
+     */
+    public function getPortionFriteCommandes(): Collection
+    {
+        return $this->portionFriteCommandes;
+    }
+
+    public function addPortionFriteCommande(PortionFriteCommande $portionFriteCommande): self
+    {
+        if (!$this->portionFriteCommandes->contains($portionFriteCommande)) {
+            $this->portionFriteCommandes[] = $portionFriteCommande;
+            $portionFriteCommande->setCommande($this);
+        }
+
+        return $this;
+    }
+
+    public function removePortionFriteCommande(PortionFriteCommande $portionFriteCommande): self
+    {
+        if ($this->portionFriteCommandes->removeElement($portionFriteCommande)) {
+            // set the owning side to null (unless already changed)
+            if ($portionFriteCommande->getCommande() === $this) {
+                $portionFriteCommande->setCommande(null);
+            }
+        }
+
+        return $this;
+    }
+
+    #[Assert\Callback]
+    public function validatArray(ExecutionContextInterface $context)
+    {
+        // dd("callback");
+        // dd(count($this->burgerCommandes));
+        if(count($this->burgerCommandes) == 0 && count($this->menuCommandeTailleBoissons) == 0){
+            $context->buildViolation('Erreur!! Veuillez choisir au moins un burger ou un menu!!')
+                        ->addViolation();
+        }
+    }
+
+    #[Assert\Callback]
+    public function doublonsBurger(ExecutionContextInterface $context)
+    {
+
+        if(count($this->getBurgerCommandes())  > 1){
+
+            foreach ($this->getBurgerCommandes() as $search) {
+                $cpt = 0;
+                foreach ($this->getBurgerCommandes() as $value) {
+                    if($search->getBurger()->getId() == $value->getBurger()->getId()){
+                        $cpt++;
+                    }
+                }
+
+                if($cpt == 2){
+                        $context->buildViolation('Erreur!! Un Burger a été repeter plusieurs fois')
+                        ->addViolation();
+                    break;
+                }
+            }
+        }
+    }
+
+
+    #[Assert\Callback]
+    public function doublonsMenu(ExecutionContextInterface $context)
+    {
+
+        if(count($this->getMenuCommandeTailleBoissons())  > 1){
+
+            foreach ($this->getMenuCommandeTailleBoissons() as $search) {
+                $cpt = 0;
+                foreach ($this->getMenuCommandeTailleBoissons() as $value) {
+                    if($search->getMenu()->getId() == $value->getMenu()->getId()){
+                        $cpt++;
+                    }
+                }
+
+                if($cpt == 2){
+                        $context->buildViolation('Erreur!! Un menu a été répéter plusieurs fois!!')
+                        ->addViolation();
+                    break;
+                }
+            }
+        }
+    }
+
+
+    #[Assert\Callback]
+    public function boissonMenu(ExecutionContextInterface $context)
+    {
+
+        if(count($this->getMenuCommandeTailleBoissons())  > 0){
+
+            foreach ($this->getMenuCommandeTailleBoissons() as $search) {
+
+                if(count($search->getTailleBoissons()) == 0){
+                    $context->buildViolation('Erreur!! Veuillez choisir les tailles-boissons du menu')
+                        ->addViolation();
+                }else{
+                    foreach ($search->getTailleBoissons() as $tailleBoisson) {
+                        // dd($tailleBoisson->getBoisson());
+                        if($tailleBoisson->getBoisson()->getId() == null || $tailleBoisson->getTaille()->getId() == null){
+                            $context->buildViolation("Erreur!! Veuillez choisir une taille et un boisson")
+                                ->addViolation();
+                        } 
+                    }
+                }
+            }
+        }
+    }
+
 }

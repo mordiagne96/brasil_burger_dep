@@ -48,9 +48,9 @@ services:
     #     tags: 
     #         - { name: doctrine.event_listener, event: prePersist}
             
-    # App\EventSubscriber\DecodeService:
-    #     tags: 
-    #         - { name: kernel.event_listener, event: kernel.REQUEST }
+    App\EventSubscriber\PortionExisteService:
+        tags: 
+            - { name: kernel.event_listener, event: kernel.REQUEST }
     
     # App\DataProvider\BurgerDataProvider':
     #     tags: [ { name: 'api_platform.collection_data_provider', priority: 2 } ]

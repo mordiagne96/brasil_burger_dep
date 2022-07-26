@@ -15,18 +15,18 @@ class TailleBoissonCommande
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(['com:write'])]
+    #[Groups(['com:write','com:read:simple'])]
     private $id;
 
     #[ORM\ManyToOne(targetEntity: TailleBoisson::class, inversedBy: 'tailleBoissonCommandes')]
-    #[Groups(['com:write'])]
+    #[Groups(['com:write','com:read:simple'])]
     private $tailleBoisson;
 
     #[ORM\ManyToOne(targetEntity: Commande::class, inversedBy: 'tailleBoissonCommandes')]
     private $commande;
 
     #[ORM\Column(type: 'integer')]
-    #[Groups(['com:write'])]
+    #[Groups(['com:write','com:read:simple'])]
     private $quantite;
 
     public function getId(): ?int

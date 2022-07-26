@@ -55,11 +55,11 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class Client extends User
 {
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
-    #[Groups(['user:read:simple','user:read:all'])]
+    #[Groups(['user:read:simple','user:read:all','com:read:simple','com:read','livraison:read'])]
     private $adresse;
 
     #[ORM\Column(type: 'string', length: 30)]
-    #[Groups(['user:read:simple','user:read:all'])]
+    #[Groups(['user:read:simple','user:read:all','com:read:simple','com:read','livraison:read'])]
     private $telephone;
 
     #[ORM\OneToMany(mappedBy: 'client', targetEntity: Commande::class)]

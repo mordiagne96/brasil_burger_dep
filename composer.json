@@ -13,6 +13,7 @@
         "doctrine/doctrine-fixtures-bundle": "^3.4",
         "doctrine/doctrine-migrations-bundle": "^3.2",
         "doctrine/orm": "^2.12",
+        "dompdf/dompdf": "^0.6.2",
         "lexik/jwt-authentication-bundle": "^2.16",
         "nelmio/cors-bundle": "^2.2",
         "phpdocumentor/reflection-docblock": "^5.3",
@@ -82,12 +83,10 @@
             "requirements-checker": "script"
         },
         "post-install-cmd": [
-            "@auto-scripts",
             "php bin/console doctrine:schema:update --force",
-            "php bin/console doctrine:migration:migrate"
+            "php bin/console doctrine:fixtures:load --append"
         ],
         "post-update-cmd": [
-            "@auto-scripts"
         ]
     },
     "conflict": {
