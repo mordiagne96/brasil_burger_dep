@@ -29,8 +29,6 @@ class CatalogueDataProvider  implements ContextAwareCollectionDataProviderInterf
 
     public function getCollection(string $resourceClass, string $operationName = null, array $context = [])
     {
-
-        dd("onk");
         $catalogues = [];
         $burgers = $this->burgerRepo->findBy(["etat"=>0]);
         $menus = $this->menuRepo->findBy(["etat"=>0]);
